@@ -23,3 +23,7 @@ using Turing
         ys[i] ~ Bernoulli(preds[i])
     end
 end;
+
+@model function LDA(x)
+    x
+end
