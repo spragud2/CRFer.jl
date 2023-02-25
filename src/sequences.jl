@@ -1,8 +1,23 @@
 using BioSequences
 using IterTools
-
+using FASTX
 
 const letters = [DNA_A,DNA_C,DNA_G,DNA_T]
+
+function read_seqs(file;
+                  rna=false)
+    seq_d = Dict{String,LongNuc}()
+    FASTAReader(open(file)) do reader
+        for record in reader
+            seq = LongDNA{4}(String(sequence(record)))
+            seq_d[identifier(record)] = rna ? convert(LongRNA{4},seq) : seq
+        end
+    end
+
+    return seq_d
+
+
+end
 
 """
     kmers(k,letters)
