@@ -70,15 +70,19 @@ end
 
 @cast umap(x) = x
 @cast ppca(x) = x
-
+@cast LDA(x) = x
 
 end 
 
 @cast kmertools 
 
 
+module crf
 @cast train(x) = x
 @cast predict(x) = x
+end
+
+@cast crf
 
 
 
