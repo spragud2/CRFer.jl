@@ -3,6 +3,10 @@ using Distributions: Uniform
 using BioSequences
 using IterTools
 
+include("utils.jl")
+
+
+
 """
     CRF
 
@@ -60,7 +64,6 @@ function (m::CRF)(x,y,
                     kmer_features,
                     transition_features;
                     🐢 = .01,
-                    trellis=true,
                 )
 
     ## sequence score given current parameters
@@ -95,6 +98,11 @@ function (m::CRF)(x,y,
     # given the input sequence and model parameters θ
     return -(score - Z)  + (🐢 * (∑(m.θ_kmers.^2) + ∑(m.θ_transition.^2)))  # per-tok mean negative log likelihood + L2 reg
 end
+
+
+function viterbi(model::CRF,x)
+    x
+end 
 
 
 """

@@ -9,7 +9,6 @@ function f(a,b,features)
 end
 
 
-
 kmer_features(emissions,labels) = vec([i for i in product(emissions,labels)])
 transition_features(labels) = vec([i for i in product(labels,labels)])
 
