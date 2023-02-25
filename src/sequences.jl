@@ -76,16 +76,24 @@ end
 Converts a sequence x to a sequence of overlapping k-mers
 
 """
-function count_kmers(seqs::Vector{T},k::Int;nuctype=DNA) where T <: LongNuc
-    X = zeros(Float32,4^k,length(seqs))
+function count_kmers(
+            seqs::Vector{T},
+            k::Int;
+            nuctype=DNA,
+            pseudocount=1
+            ) where T <: LongNuc
+
+            
+    X = zeros(Float32,4^k,length(seqs)) .+ pseudocount
     km = kmer_map(4,nuctype)
     for (j,seq) ∈ enumerate(seqs)
         L = num_kmers(seq,k)
         for i ∈ 1:L
             curr_kmer = seq[i:i+k-1]
             idx = km[curr_kmer]
-            X[idx,j] += 1 / L
+            X[idx,j] += 1
         end
+        X[:,j] /= ∑(X[:,j])
     end 
     return X 
 end

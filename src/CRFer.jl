@@ -7,7 +7,6 @@ include("utils.jl")
 include("features.jl")
 include("sequences.jl")
 
-export kmer_map
 
 """
 Tools for kmers!
@@ -17,9 +16,11 @@ module kmertools
 
 using BioSequences
 using Comonicon
+using DataFrames
+using CSV
 
 include("sequences.jl")
-
+include("utils.jl")
 
 """
 Get k-mer frequencies for a set of RNA or DNA sequences.
@@ -28,7 +29,7 @@ Get k-mer frequencies for a set of RNA or DNA sequences.
 
 - `seqs`: Path to sequence file
 - `k`: Value of k 
-
+- `o`: Output file
 # Flags
 - `-r, --rna`: Return strings and kmers in RNA instead of DNA
 - `-l, --lnorm`: Disable length normalize the k-mer counts to frequencies, default=True
@@ -36,22 +37,27 @@ Get k-mer frequencies for a set of RNA or DNA sequences.
 """
 @cast function freq(
                         seqs::String,
-                        k::Int;
+                        k::Int,
+                        o::String;
                         rna::Bool=false,
                         lnorm::Bool=false,
                         std::Bool=false,
-                        )
+                    )
+
+    if lnorm || std
+        error("unimplemented")
+    end
 
     nuctype = rna ? RNA : DNA
     ids,seqs = read_seqs(seqs;rna=rna)
     
     X = count_kmers(seqs,k;nuctype=nuctype)
-    
 
-    
+    standardize!(X)
 
+    out_df = DataFrame(X,ids,makeunique=true)
 
-
+    CSV.write(o,out_df)
 
 end 
 
