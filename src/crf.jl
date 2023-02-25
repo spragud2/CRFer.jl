@@ -3,9 +3,6 @@ using Distributions: Uniform
 using BioSequences
 using IterTools
 
-include("utils.jl")
-
-
 
 """
     CRF
@@ -100,9 +97,9 @@ function (m::CRF)(x,y,
 end
 
 
-function viterbi(model::CRF,x)
-    x
-end 
+# function viterbi(model::CRF,x)
+#     x
+# end 
 
 
 """
@@ -138,8 +135,6 @@ function train!(model::CRF,
         end
     end
 
-    if return_loss_curve
-        return loss_history
 end
 
 
