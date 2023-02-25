@@ -3,29 +3,11 @@ using Distributions: Uniform
 using BioSequences
 using IterTools
 
-x = dna"ATCG"^4 * dna"TTTT"^4 
-x = sequence_to_kmers(x,1)
-
-f1 = []
-f2 = []
-labels = ['A' 'B']
-emissions = kmers(1)
-i = 1
-
-y = "A"^16 * "B"^16
-y = [i for i in y]
-
-
-
-
-
-
-
 """
     CRF
 
-Struct representing a Conditional Random Field (CRF). The struct contains a set of parameters
-that can be any number of things. As a default, the model contains parameters for k-mers in each
+A Conditional Random Field (CRF). The struct contains a set of parameters
+that can be any number of things. By default, the model contains parameters for k-mers in each
 state/domain and transition parameters. A CRF with just these features is essentially a non-generative/discriminative
 Hidden Markov Model (HMM).
 
@@ -115,61 +97,42 @@ function (m::CRF)(x,y,
 end
 
 
-NLL = model(x,y,labels,kmer_features,transition_features)
+"""
+    train!(model,input;args)
 
-# Allows the internal parameters of the CRF model to be updated
-# during gradient descent
-Flux.@functor CRF
+Takes an input CRF model and performs gradient descent. Updates model parameters in place over
+N training epochs. The CRF likelihood function is convex, however a learning rate should be used
+to avoid bouncing around the global minimum.
 
-model = CRF(8,4)
-🐢 = .1
-N = 100
-loss_history = Vector{Float32}(undef,N)
+Input needs to be passed as a tuple that includes 
+
+input = (x,y,labels,features...)
 
 
-# Training loop
-# A CRF has a strictly convex loss but a small-ish learning rate should still be set so that
-# the model does not miss the global minimum
-for i ∈ 1:N
-    local loss
-    gs = gradient(Flux.params(model)) do
-        loss = model(x,y,labels,kmer_features,transition_features)
-        return loss
-    end
-    loss_history[i] = loss
-    for p ∈ Flux.params(model)
-        p .-= 🐢 * gs[p]
-    end
-end
+"""
+function train!(model::CRF,
+                input;
+                N = 100,
+                🐢 = .01,
+                return_loss_curve = true)
     
+    loss_history = Vector{Float32}(undef,N)
 
-parameters_initial, reconstruct = Flux.destructure(model)
-
-using Turing
-
-
-## Notes
-
-## I think if we tell flux to ignore the gradient for trellis computation
-## We can forward and backward passes and get a categorical distribution
-## at each position and then feed that to the turing  model likelihood?
-
-
-@model function bayesCRF(xs, ys, nparameters, reconstruct,
-                        kmer_features,transition_features; alpha=0.09)
-    # Create the weight and bias vector.
-    parameters ~ MvNormal(Zeros(nparameters), I / alpha)
-
-    # Construct NN from parameters
-    crf = reconstruct(parameters)
-    # Forward NN to make predictions
-    preds = crf(xs,ys,labels,kmer_features,transition_features)
-
-    # Observe each prediction.
-    for i in 1:lastindex(ys)
-        ys[i] ~ Bernoulli(preds[i])
+    for i ∈ 1:N
+        local loss
+        gs = gradient(Flux.params(model)) do
+            loss = model(input...)
+            return loss
+        end
+        loss_history[i] = loss
+        for p ∈ Flux.params(model)
+            p .-= 🐢 * gs[p]
+        end
     end
-end;
+
+    if return_loss_curve
+        return loss_history
+end
 
 
 
