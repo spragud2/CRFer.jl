@@ -140,7 +140,7 @@ function train!(model::CRF,
     for p ∈ Flux.params(model)
         p .-= 🐢 * gs[p]
     end
-
+    return loss
 end
 
 

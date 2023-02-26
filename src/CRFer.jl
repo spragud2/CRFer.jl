@@ -77,6 +77,7 @@ using Comonicon
 using CSV
 using DataFrames
 using ProgressBars
+using Plots
 
 include("sequences.jl")
 include("utils.jl")
@@ -150,11 +151,20 @@ end
     for epoch ∈ ProgressBar(1:N)
             for (x,y) ∈ training_data
                 x = sequence_to_kmers(x,k)
-                input = [x,y,states,emissions,transitions]
-                train!(model,input...; 🐢 = lr)
+                input = [x[1:1000],y[1:1000],states,emissions,transitions]
+                loss = train!(model,input...; 🐢 = lr)
+                loss_history[epoch] = loss
             end 
     end 
 
+    g = plot(loss_history,
+            linewidth=4,
+            grid=:none,
+            label="Per Token NLL")
+    ylabel!("Loss")
+    xlabel!("Iteration")
+
+    savefig(g,"./loss.pdf")
 
     println(Dict(zip(transitions,model.θ_transition)))
 
