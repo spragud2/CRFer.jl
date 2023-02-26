@@ -1,7 +1,11 @@
+__precompile__()
+
 module CRFer
 
 using Comonicon
 
+
+__precompile__()
 """
 Tools for kmers!
 
@@ -70,7 +74,7 @@ end
 
 @cast kmertools 
 
-
+__precompile__()
 module crf
 
 using Comonicon
@@ -78,7 +82,7 @@ using CSV
 using DataFrames
 using ProgressBars
 using Plots
-
+using Flux
 using BSON: @save, @load
 
 include("sequences.jl")

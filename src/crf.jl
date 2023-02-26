@@ -1,9 +1,3 @@
-using Flux
-using Distributions: Uniform
-using BioSequences
-using IterTools
-
-
 """
     CRF
 
