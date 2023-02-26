@@ -2,12 +2,6 @@ module CRFer
 
 using Comonicon
 
-include("crf.jl")
-include("utils.jl")
-include("features.jl")
-include("sequences.jl")
-
-
 """
 Tools for kmers!
 
@@ -82,6 +76,7 @@ module crf
 using Comonicon
 using CSV
 using DataFrames
+using ProgressBars
 
 include("sequences.jl")
 include("utils.jl")
@@ -135,19 +130,30 @@ end
                     labels::String,
                     states::String;
                     k::Int=4,
-                    🐢 = .1,
-                    N = 100,
+                    🐢::Float64 = 0.1,
+                    N::Int = 100,
                     )
-    states = [state for states in readlines(states)]
-    kmers = kmers(k)
+    states = [state for state in readlines(states)]
+    kmer_tuples = kmers(k)
 
     ids,seqs = read_seqs(sequences)
-    y = DataFrame(CSV.File(labels))
+    Y = Matrix(DataFrame(CSV.File(labels)))
+
+    training_data = zip(seqs,Y)
 
     Flux.@functor CRF
     transitions = transition_features(states)
-    emissions = kmer_features(kmers,states)
+    emissions = kmer_features(kmer_tuples,states)
     model = CRF(size(emissions,1),size(transitions,1))
+
+    for epoch ∈ ProgressBar(1:N)
+        for (x,y) ∈ training_data
+            x = sequence_to_kmers(x,k)
+            input = [x,y,states,emissions,transitions]
+            train!(model,input...; 🐢 = 🐢)
+        end 
+    end 
+
 
 
 
@@ -159,32 +165,6 @@ end
 end
 
 @cast crf
-
-
-
-# x = dna"ATCG"^4 * dna"TTTT"^4 
-# x = sequence_to_kmers(x,1)
-
-# f1 = []
-# f2 = []
-# labels = ['A' 'B']
-# emissions = kmers(1)
-# i = 1
-
-# y = "A"^16 * "B"^16
-# y = [i for i in y]
-
-# NLL = model(x,y,labels,kmer_features,transition_features)
-
-# # Allows the internal parameters of the CRF model to be updated
-# # during gradient descent
-# Flux.@functor CRF
-
-# model = CRF(8,4)
-# 🐢 = .1
-# N = 100
-# loss_history = Vector{Float32}(undef,N)
-# parameters_initial, reconstruct = Flux.destructure(model)
 
 
 @main

@@ -63,7 +63,7 @@ function (m::CRF)(x,y,
                     states,
                     kmer_features,
                     transition_features;
-                    🐢 = .01,
+                    🐢 = .1,
                 )
 
     ## sequence score given current parameters
@@ -119,23 +119,25 @@ input = (x,y,labels,features...)
 
 """
 function train!(model::CRF,
-                input;
+                x,
+                y,
+                states,
+                kmer_features,
+                transition_features,
+                ;
                 N = 100,
                 🐢 = .01,
                 return_loss_curve = true)
     
     loss_history = Vector{Float32}(undef,N)
-
-    for i ∈ 1:N
-        local loss
-        gs = gradient(Flux.params(model)) do
-            loss = model(input...)
-            return loss
-        end
-        loss_history[i] = loss
-        for p ∈ Flux.params(model)
-            p .-= 🐢 * gs[p]
-        end
+    local loss
+    gs = gradient(Flux.params(model)) do
+        loss = model(x,y,states,kmer_features,transition_features)
+        return loss
+    end
+    loss_history[i] = loss
+    for p ∈ Flux.params(model)
+        p .-= 🐢 * gs[p]
     end
 
 end
