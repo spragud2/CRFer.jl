@@ -139,6 +139,8 @@ end
     ids,seqs = read_seqs(sequences)
     Y = Matrix(DataFrame(CSV.File(labels)))
 
+    println(Y)
+
     training_data = zip(seqs,Y)
 
     Flux.@functor CRF
