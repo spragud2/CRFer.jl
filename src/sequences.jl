@@ -1,9 +1,3 @@
-using BioSequences
-using IterTools
-using FASTX
-
-const letters = [DNA_A,DNA_C,DNA_G,DNA_T]
-
 function read_seqs(file;
                   rna=false)
     ids = String[]
@@ -83,7 +77,7 @@ function count_kmers(
             pseudocount=1
             ) where T <: LongNuc
 
-            
+
     X = zeros(Float32,4^k,length(seqs)) .+ pseudocount
     km = kmer_map(4,nuctype)
     for (j,seq) ∈ enumerate(seqs)

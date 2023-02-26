@@ -16,6 +16,9 @@ using BioSequences
 using Comonicon
 using DataFrames
 using CSV
+using Statistics: mean,std
+using IterTools
+using FASTX
 
 include("sequences.jl")
 include("utils.jl")
@@ -83,7 +86,10 @@ using DataFrames
 using ProgressBars
 using Plots
 using Flux
-using BSON: @save, @load
+using BSON: @save, @load 
+using BioSequences
+using IterTools
+using FASTX
 
 include("sequences.jl")
 include("utils.jl")
@@ -155,10 +161,10 @@ end
 
     loss_history = Vector{Float32}(undef,N)
 
-    for epoch ∈ ProgressBar(1:N)
+    @time for epoch ∈ ProgressBar(1:N)
             for (x,y) ∈ training_data
                 x = sequence_to_kmers(x,k)
-                input = [x[1:1000],y[1:1000],states,emissions,transitions]
+                input = [x,y,states,emissions,transitions]
                 loss = train!(model,input...; 🐢 = lr)
                 loss_history[epoch] = loss
             end 
