@@ -130,32 +130,33 @@ end
                     labels::String,
                     states::String;
                     k::Int=4,
-                    🐢::Float64 = 0.1,
-                    N::Int = 100,
+                    lr::Float64 = 0.1,
+                    N::Int = 10,
                     )
     states = [state for state in readlines(states)]
     kmer_tuples = kmers(k)
 
     ids,seqs = read_seqs(sequences)
-    Y = Matrix(DataFrame(CSV.File(labels)))
-
-    println(Y)
+    Y = DataFrame(CSV.File(labels))
+    Y = [i for i ∈ eachcol(Y)]
 
     training_data = zip(seqs,Y)
-
-    Flux.@functor CRF
     transitions = transition_features(states)
     emissions = kmer_features(kmer_tuples,states)
     model = CRF(size(emissions,1),size(transitions,1))
 
+    loss_history = Vector{Float32}(undef,N)
+
     for epoch ∈ ProgressBar(1:N)
-        for (x,y) ∈ training_data
-            x = sequence_to_kmers(x,k)
-            input = [x,y,states,emissions,transitions]
-            train!(model,input...; 🐢 = 🐢)
-        end 
+            for (x,y) ∈ training_data
+                x = sequence_to_kmers(x,k)
+                input = [x,y,states,emissions,transitions]
+                train!(model,input...; 🐢 = lr)
+            end 
     end 
 
+
+    println(Dict(zip(transitions,model.θ_transition)))
 
 
 

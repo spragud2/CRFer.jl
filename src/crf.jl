@@ -63,14 +63,14 @@ function (m::CRF)(x,y,
                     states,
                     kmer_features,
                     transition_features;
-                    🐢 = .1,
+                    🐢 = .01,
                 )
 
     ## sequence score given current parameters
 
     score = ∑(m.θ_kmers .* f(x[1],y[1],kmer_features))
     score += ∑(m.θ_transition .* f(y[1],y[1],transition_features))
-    for t ∈ 2:lastindex(x)
+    @inbounds for t ∈ 2:lastindex(x)
         score += ∑(m.θ_kmers .* f(x[t],y[t],kmer_features))
         score += ∑(m.θ_transition .* f(y[t],y[t-1],transition_features))
     end
@@ -86,18 +86,22 @@ function (m::CRF)(x,y,
     T = vec([dot(m.θ_transition,f(i,i,transition_features)) for i in states])
     α_prior = U+T 
 
-    for t ∈ 2:lastindex(x)
+    @inbounds for t ∈ 2:lastindex(x)
         α_x = vec([dot(m.θ_kmers,f(x[t],j,kmer_features)) for j in states])
         α_y = vec([LSE(vec([dot(m.θ_transition,f(i,j,transition_features)) for j in states])) for i in states])
         α_prior = LSE(α_prior) .+ α_x .+ α_y
     end
     Z = LSE(α_prior)
-
+    NLL = -(score - Z)
+    NLL /= length(x)
     # calculation in log space, so (score - Z) is 
     # p(y|x,θ), or the probability of sequence labels
     # given the input sequence and model parameters θ
-    return -(score - Z)  + (🐢 * (∑(m.θ_kmers.^2) + ∑(m.θ_transition.^2)))  # per-tok mean negative log likelihood + L2 reg
+    return NLL + (🐢 * (∑(m.θ_kmers.^2) + ∑(m.θ_transition.^2)))  # per-tok negative log likelihood + L2 reg
 end
+
+Flux.@functor CRF
+
 
 
 # function viterbi(model::CRF,x)
@@ -123,19 +127,16 @@ function train!(model::CRF,
                 y,
                 states,
                 kmer_features,
-                transition_features,
-                ;
-                N = 100,
+                transition_features;
                 🐢 = .01,
-                return_loss_curve = true)
+                )
     
-    loss_history = Vector{Float32}(undef,N)
     local loss
     gs = gradient(Flux.params(model)) do
         loss = model(x,y,states,kmer_features,transition_features)
         return loss
     end
-    loss_history[i] = loss
+    
     for p ∈ Flux.params(model)
         p .-= 🐢 * gs[p]
     end
