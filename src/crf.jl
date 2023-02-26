@@ -9,8 +9,11 @@ using IterTools
 
 A Conditional Random Field (CRF). The struct contains a set of parameters
 that can be any number of things. By default, the model contains parameters for k-mers in each
-state/domain and transition parameters. A CRF with just these features is essentially a non-generative/discriminative
-Hidden Markov Model (HMM).
+state/domain and transition parameters. 
+
+A CRF with just emission and transition features is essentially a
+Hidden Markov Model (HMM), except that the model is discriminative (classifier, p(y|x)) rather than
+generative p(x,y).
 
 """
 struct CRF
@@ -21,7 +24,7 @@ end
 """
     CRF(kmer_feature_size,transition_feature_size)
 
-Initializes a new, untrained CRF model
+Function to initialize a new, untrained CRF model
 """
 CRF(kmer_feature_size::Integer, transition_feature_size::Integer) =
   CRF(Flux.glorot_uniform(kmer_feature_size), Flux.glorot_uniform(transition_feature_size))
