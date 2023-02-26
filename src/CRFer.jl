@@ -79,6 +79,8 @@ using DataFrames
 using ProgressBars
 using Plots
 
+using BSON: @save, @load
+
 include("sequences.jl")
 include("utils.jl")
 include("crf.jl")
@@ -130,6 +132,7 @@ end
                     sequences::String,
                     labels::String,
                     states::String;
+                    o::String="model.bson",
                     k::Int=4,
                     lr::Float64 = 0.1,
                     N::Int = 10,
@@ -157,6 +160,7 @@ end
             end 
     end 
 
+    println("Saving loss history graph...")
     g = plot(loss_history,
             linewidth=4,
             grid=:none,
@@ -166,10 +170,10 @@ end
 
     savefig(g,"./loss.pdf")
 
-    println(Dict(zip(transitions,model.θ_transition)))
 
+    println("Saving model")
 
-
+    @save o model
 
 
 
